@@ -1,0 +1,32 @@
+package com.spark_example;
+
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import org.apache.spark.rdd.RDD.rddToPairRDDFunctions
+object Wordcount {
+  def main(args: Array[String]) = {
+
+    //Start the Spark context
+    val conf = new SparkConf()
+      .setAppName("WordCount")
+      //.setMaster("spark://big-virtual-machine:7077")
+      .setJars(Seq("/home/big/workspace_3/spark_example/target/spark_example-0.0.1-SNAPSHOT-jar-with-dependencies.jar"));
+//create a directory bin inside utils dir and give the full path exclude bin like above because it can able to detect bin dir
+    val sc = new SparkContext(conf)
+
+    //Read some example file to a test RDD
+    val test = sc.textFile("hdfs://localhost:50000/word")
+
+    test.flatMap { line => //for each line
+      line.split(" ") //split the line in word by word.
+    }
+      .map { word => //for each word
+        (word, 1) //Return a key/value tuple, with the word as key and 1 as value
+      }
+      .reduceByKey(_ + _) //Sum all of the value with same key
+      .saveAsTextFile("hdfs://localhost:50000/wordoutput1") //Save to a text file
+
+    //Stop the Spark context
+    sc.stop
+  }
+}
